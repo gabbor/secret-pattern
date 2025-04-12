@@ -1,22 +1,38 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 void main() {
   runApp(MastermindGame());
 }
 
 class MastermindGame extends StatelessWidget {
+  const MastermindGame({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mastermind',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+        primaryColor: Colors.deepPurple,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.deepPurple,
+          onPrimary: Colors.white,
+          secondary: Colors.amber,
+        ),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+        ),
+      ),
       home: GameScreen(),
     );
   }
 }
 
 class GameScreen extends StatefulWidget {
+  const GameScreen({super.key});
+
   @override
   _GameScreenState createState() => _GameScreenState();
 }
@@ -34,7 +50,9 @@ class _GameScreenState extends State<GameScreen> {
   List<Color?> currentAttempt = [null, null, null, null];
   List<List<Color?>> attempts = [];
   List<Map<String, int>> feedbacks = [];
-  int maxAttempts = 10;
+  int maxAttempts = 8;
+  bool isSecretCodeRevealed = false;
+  bool isGameOver = false;
 
   @override
   void initState() {
@@ -42,9 +60,50 @@ class _GameScreenState extends State<GameScreen> {
     generateSecretCode();
   }
 
+  void showGameOverDialog(String message) {
+    setState(() {
+      isSecretCodeRevealed = true;
+    });
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(message),
+        backgroundColor: Colors.grey[900],
+        contentTextStyle: TextStyle(color: Colors.white70),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        actions: [
+          TextButton(
+            child: Text("Nuova Partita", style: TextStyle(color: Colors.amber)),
+            onPressed: () {
+              Navigator.of(context).pop();
+              resetGame();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void generateSecretCode() {
     secretCode = List.from(colors)..shuffle();
     secretCode = secretCode.sublist(0, 4);
+
+    Map<Color, String> colorNames = {
+      Colors.red: "Red",
+      Colors.blue: "Blue",
+      Colors.green: "Green",
+      Colors.yellow: "Yellow",
+      Colors.orange: "Orange",
+      Colors.purple: "Purple",
+    };
+
+    for (var color in secretCode) {
+      if (kDebugMode) {
+        print("Nome colore: ${colorNames[color]}");
+      }
+    }
   }
 
   Map<String, int> evaluateAttempt(List<Color?> secret, List<Color?> attempt) {
@@ -63,17 +122,21 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     for (int i = 0; i < remainingAttempt.length; i++) {
-      if (remainingAttempt[i] != null && remainingSecret.contains(remainingAttempt[i])) {
+      if (remainingAttempt[i] != null &&
+          remainingSecret.contains(remainingAttempt[i])) {
         correctColors++;
         remainingSecret[remainingSecret.indexOf(remainingAttempt[i])] = null;
       }
     }
 
-    return {"correctPositions": correctPositions, "correctColors": correctColors};
+    return {
+      "correctPositions": correctPositions,
+      "correctColors": correctColors
+    };
   }
 
   void submitAttempt() {
-    if (currentAttempt.contains(null)) return;
+    if (isGameOver || currentAttempt.contains(null)) return;
 
     setState(() {
       attempts.add(List.from(currentAttempt));
@@ -84,34 +147,21 @@ class _GameScreenState extends State<GameScreen> {
     if (attempts.last.map((e) => e.toString()).toList().toString() ==
         secretCode.map((e) => e.toString()).toList().toString()) {
       showGameOverDialog("Hai Vinto!");
+      isGameOver = true;
     } else if (attempts.length >= maxAttempts) {
-      showGameOverDialog("Hai Perso! Codice segreto: ${secretCode.map((c) => c.toString()).join(", ")}");
+      showGameOverDialog("Hai Perso!");
+      isGameOver = true;
     }
   }
 
-  void showGameOverDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(message),
-        actions: [
-          TextButton(
-            child: Text("Nuova Partita"),
-            onPressed: () {
-              Navigator.of(context).pop();
-              resetGame();
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   void resetGame() {
     setState(() {
       attempts = [];
       feedbacks = [];
       currentAttempt = [null, null, null, null];
+      isSecretCodeRevealed = false;
+      isGameOver = false; // Ripristina lo stato del gioco
       generateSecretCode();
     });
   }
@@ -130,14 +180,41 @@ class _GameScreenState extends State<GameScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Mastermind'),
+        backgroundColor: Colors.deepPurple,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
         child: Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: secretCode.map((color) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSecretCodeRevealed ? color : Colors.grey[800],
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white),
+                  ),
+                  child: isSecretCodeRevealed
+                      ? null
+                      : Center(
+                          child: Text(
+                            '?',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 15),
             Text(
               'Tentativi rimasti: ${maxAttempts - attempts.length}',
-              style: TextStyle(fontSize: 20),
+              style: TextStyle(color: Colors.white, fontSize: 20),
             ),
             SizedBox(height: 10),
             Expanded(
@@ -148,19 +225,39 @@ class _GameScreenState extends State<GameScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ...attempts[index].map((color) => Container(
-                        margin: EdgeInsets.all(4),
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: color ?? Colors.grey,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black),
-                        ),
-                      )),
+                            margin: EdgeInsets.all(4),
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: color ?? Colors.grey[800],
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white),
+                            ),
+                          )),
                       SizedBox(width: 10),
-                      Text(
-                        '✔: ${feedbacks[index]["correctPositions"]}, ✖: ${feedbacks[index]["correctColors"]}',
-                        style: TextStyle(fontSize: 16),
+                      Row(
+                        children: List.generate(currentAttempt.length, (i) {
+                          Color feedbackColor;
+                          if (i < feedbacks[index]["correctPositions"]!) {
+                            feedbackColor = Colors.green; // Posizione corretta
+                          } else if (i <
+                              feedbacks[index]["correctPositions"]! +
+                                  feedbacks[index]["correctColors"]!) {
+                            feedbackColor = Colors.amber; // Colore corretto
+                          } else {
+                            feedbackColor = Colors.white; // Nulla
+                          }
+                          return Container(
+                            margin: EdgeInsets.symmetric(horizontal: 2),
+                            width: 15,
+                            height: 15,
+                            decoration: BoxDecoration(
+                              color: feedbackColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey),
+                            ),
+                          );
+                        }),
                       ),
                     ],
                   );
@@ -186,49 +283,81 @@ class _GameScreenState extends State<GameScreen> {
                           currentAttempt[index] = receivedColor;
                         });
                       },
-                      builder: (context, candidateData, rejectedData) => Container(
+                      builder: (context, candidateData, rejectedData) =>
+                          Container(
                         margin: EdgeInsets.all(8),
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: color ?? Colors.grey[300],
+                          color: color ?? Colors.grey[800],
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black),
+                          border: Border.all(color: Colors.white),
                         ),
                       ),
                     ),
                   );
-                }).toList(),
-                if (!currentAttempt.contains(null))
-                  ElevatedButton(
+                }),
+                SizedBox(width: 10),
+                Visibility(
+                  visible: !currentAttempt.contains(null),
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(40, 40),
+                      padding: EdgeInsets.zero,
+                    ),
                     onPressed: submitAttempt,
-                    child: Text('Conferma'),
+                    child: Icon(Icons.check, size: 24, color: Colors.white),
                   ),
+                ),
               ],
             ),
             SizedBox(height: 20),
-            Wrap(
-              children: colors.map((color) {
-                return GestureDetector(
-                  onTap: () {
-                    addColorToFirstEmptySlot(color); // Aggiunge il colore alla prima palla libera
-                  },
-                  child: Draggable<Color>(
-                    data: color,
-                    feedback: Container(), // Nessun feedback visivo durante il trascinamento
-                    child: Container(
-                      margin: EdgeInsets.all(8),
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black),
-                      ),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              margin: EdgeInsets.only(top: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  double maxWidth =
+                      constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
+                  return SizedBox(
+                    width: maxWidth,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: colors.map((color) {
+                        return GestureDetector(
+                          onTap: () {
+                            addColorToFirstEmptySlot(color);
+                          },
+                          child: Draggable<Color>(
+                            data: color,
+                            feedback: Container(),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 8),
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                },
+              ),
             ),
           ],
         ),
