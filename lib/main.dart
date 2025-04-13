@@ -293,9 +293,9 @@ class GameScreenState extends State<GameScreen> {
                       });
                     },
                     child: DragTarget<Color>(
-                      onAccept: (receivedColor) {
+                      onAcceptWithDetails: (receivedColor) {
                         setState(() {
-                          currentAttempt[index] = receivedColor;
+                          currentAttempt[index] = receivedColor.data;
                         });
                       },
                       builder: (context, candidateData, rejectedData) =>
