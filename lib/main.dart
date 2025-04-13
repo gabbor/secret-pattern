@@ -181,6 +181,21 @@ class _GameScreenState extends State<GameScreen> {
       appBar: AppBar(
         title: Text('Mastermind'),
         backgroundColor: Colors.deepPurple,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'Riavvia') {
+                resetGame();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'Riavvia',
+                child: Text('Riavvia Partita'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
