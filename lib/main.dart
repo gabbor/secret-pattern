@@ -34,10 +34,10 @@ class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
   @override
-  _GameScreenState createState() => _GameScreenState();
+  GameScreenState createState() => GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class GameScreenState extends State<GameScreen> {
   List<Color> secretCode = [];
   List<Color> colors = [
     Colors.red,
