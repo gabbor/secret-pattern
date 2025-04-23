@@ -52,7 +52,7 @@ class GameScreenState extends State<GameScreen> {
   List<Color?> currentAttempt = [null, null, null, null];
   List<List<Color?>> attempts = [];
   List<Map<String, int>> feedbacks = [];
-  int maxAttempts = 8;
+  int maxAttempts = 10;
   bool isSecretCodeRevealed = false;
   bool isGameOver = false;
 
