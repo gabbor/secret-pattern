@@ -86,7 +86,7 @@ class GameScreenState extends State<GameScreen> {
             color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         actions: [
           TextButton(
-            child: Text("Nuova Partita", style: TextStyle(color: Colors.amber)),
+            child: Text("New Game", style: TextStyle(color: Colors.amber)),
             onPressed: () {
               Navigator.of(context).pop();
               resetGame();
@@ -101,7 +101,7 @@ class GameScreenState extends State<GameScreen> {
     Random random = Random();
     secretCode = List.generate(4, (_) => colors[random.nextInt(colors.length)]);
     if (kDebugMode) {
-      print("Codice segreto finale: ${secretCode.map((color) => colorNames[color]).join(', ')}");
+      print("Secret code: ${secretCode.map((color) => colorNames[color]).join(', ')}");
     }
   }
 
@@ -145,10 +145,10 @@ class GameScreenState extends State<GameScreen> {
 
     if (attempts.last.map((e) => e.toString()).toList().toString() ==
         secretCode.map((e) => e.toString()).toList().toString()) {
-      showGameOverDialog("Hai Vinto!");
+      showGameOverDialog("You Win!");
       isGameOver = true;
     } else if (attempts.length >= maxAttempts) {
-      showGameOverDialog("Hai Perso!");
+      showGameOverDialog("You Suck!");
       isGameOver = true;
     }
   }
@@ -160,7 +160,7 @@ class GameScreenState extends State<GameScreen> {
       feedbacks = [];
       currentAttempt = [null, null, null, null];
       isSecretCodeRevealed = false;
-      isGameOver = false; // Ripristina lo stato del gioco
+      isGameOver = false;
       generateSecretCode();
     });
   }
@@ -183,14 +183,14 @@ class GameScreenState extends State<GameScreen> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'Riavvia') {
+              if (value == 'Restart') {
                 resetGame();
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: 'Riavvia',
-                child: Text('Riavvia Partita'),
+                value: 'Restart',
+                child: Text('Restart Game'),
               ),
             ],
           ),
@@ -227,7 +227,7 @@ class GameScreenState extends State<GameScreen> {
             ),
             SizedBox(height: 15),
             Text(
-              'Tentativi rimasti: ${maxAttempts - attempts.length}',
+              'Attempts: ${maxAttempts - attempts.length}',
               style: TextStyle(color: Colors.white, fontSize: 20),
             ),
             SizedBox(height: 10),
