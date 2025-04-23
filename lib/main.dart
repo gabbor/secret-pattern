@@ -200,28 +200,14 @@ class GameScreenState extends State<GameScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
         child: Column(
           children: [
+            // Secret Code Display
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: secretCode.map((color) {
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 4),
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isSecretCodeRevealed ? color : Colors.grey[800],
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white),
-                  ),
-                  child: isSecretCodeRevealed
-                      ? null
-                      : Center(
-                          child: Text(
-                            '?',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                return ColorCircle(
+                  color: isSecretCodeRevealed ? color : Colors.grey[800]!,
+                  showText: !isSecretCodeRevealed,
+                  text: '?',
                 );
               }).toList(),
             ),
@@ -238,38 +224,27 @@ class GameScreenState extends State<GameScreen> {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ...attempts[index].map((color) => Container(
-                            margin: EdgeInsets.all(4),
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: color ?? Colors.grey[800],
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white),
-                            ),
-                          )),
+                      ...attempts[index].map((color) => ColorCircle(
+                        color: color ?? Colors.grey[800]!,
+                        size: 30,
+                      )),
                       SizedBox(width: 10),
                       Row(
                         children: List.generate(currentAttempt.length, (i) {
                           Color feedbackColor;
                           if (i < feedbacks[index]["correctPositions"]!) {
-                            feedbackColor = Colors.green; // Posizione corretta
+                            feedbackColor = Colors.green; // Correct position
                           } else if (i <
                               feedbacks[index]["correctPositions"]! +
                                   feedbacks[index]["correctColors"]!) {
-                            feedbackColor = Colors.amber; // Colore corretto
+                            feedbackColor = Colors.amber; // Correct color
                           } else {
-                            feedbackColor = Colors.white; // Nulla
+                            feedbackColor = Colors.white; // None
                           }
-                          return Container(
-                            margin: EdgeInsets.symmetric(horizontal: 2),
-                            width: 15,
-                            height: 15,
-                            decoration: BoxDecoration(
-                              color: feedbackColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey),
-                            ),
+                          return ColorCircle(
+                            color: feedbackColor,
+                            size: 15,
+                            borderColor: Colors.grey,
                           );
                         }),
                       ),
@@ -297,16 +272,8 @@ class GameScreenState extends State<GameScreen> {
                           currentAttempt[index] = receivedColor.data;
                         });
                       },
-                      builder: (context, candidateData, rejectedData) =>
-                          Container(
-                        margin: EdgeInsets.all(8),
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color ?? Colors.grey[800],
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white),
-                        ),
+                      builder: (context, candidateData, rejectedData) => ColorCircle(
+                        color: color ?? Colors.grey[800]!,
                       ),
                     ),
                   );
@@ -342,7 +309,7 @@ class GameScreenState extends State<GameScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   double maxWidth =
-                      constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
+                  constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
                   return SizedBox(
                     width: maxWidth,
                     child: Row(
@@ -355,16 +322,7 @@ class GameScreenState extends State<GameScreen> {
                           child: Draggable<Color>(
                             data: color,
                             feedback: Container(),
-                            child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 8),
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white),
-                              ),
-                            ),
+                            child: ColorCircle(color: color),
                           ),
                         );
                       }).toList(),
@@ -376,6 +334,45 @@ class GameScreenState extends State<GameScreen> {
           ],
         ),
       ),
+    );
+  }
+
+}
+
+class ColorCircle extends StatelessWidget {
+  final Color color;
+  final double size;
+  final Color borderColor;
+  final bool showText;
+  final String text;
+
+  const ColorCircle({super.key,
+    required this.color,
+    this.size = 40.0,
+    this.borderColor = Colors.white,
+    this.showText = false,
+    this.text = '',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.all(4),
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor),
+      ),
+      child: showText
+          ? Center(
+        child: Text(
+          text,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      )
+          : null,
     );
   }
 }
