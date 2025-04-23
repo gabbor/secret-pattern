@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
+
 
 void main() {
   runApp(MastermindGame());
@@ -54,6 +56,15 @@ class GameScreenState extends State<GameScreen> {
   bool isSecretCodeRevealed = false;
   bool isGameOver = false;
 
+  static final Map<Color, String> colorNames = {
+    Colors.red: "Red",
+    Colors.blue: "Blue",
+    Colors.green: "Green",
+    Colors.yellow: "Yellow",
+    Colors.orange: "Orange",
+    Colors.purple: "Purple",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -87,22 +98,10 @@ class GameScreenState extends State<GameScreen> {
   }
 
   void generateSecretCode() {
-    secretCode = List.from(colors)..shuffle();
-    secretCode = secretCode.sublist(0, 4);
-
-    Map<Color, String> colorNames = {
-      Colors.red: "Red",
-      Colors.blue: "Blue",
-      Colors.green: "Green",
-      Colors.yellow: "Yellow",
-      Colors.orange: "Orange",
-      Colors.purple: "Purple",
-    };
-
-    for (var color in secretCode) {
-      if (kDebugMode) {
-        print("Nome colore: ${colorNames[color]}");
-      }
+    Random random = Random();
+    secretCode = List.generate(4, (_) => colors[random.nextInt(colors.length)]);
+    if (kDebugMode) {
+      print("Codice segreto finale: ${secretCode.map((color) => colorNames[color]).join(', ')}");
     }
   }
 
