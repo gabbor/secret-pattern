@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-
 void main() {
   runApp(MastermindGame());
 }
@@ -101,7 +100,8 @@ class GameScreenState extends State<GameScreen> {
     Random random = Random();
     secretCode = List.generate(4, (_) => colors[random.nextInt(colors.length)]);
     if (kDebugMode) {
-      print("Secret code: ${secretCode.map((color) => colorNames[color]).join(', ')}");
+      print(
+          "Secret code: ${secretCode.map((color) => colorNames[color]).join(', ')}");
     }
   }
 
@@ -153,7 +153,6 @@ class GameScreenState extends State<GameScreen> {
     }
   }
 
-
   void resetGame() {
     setState(() {
       attempts = [];
@@ -177,39 +176,18 @@ class GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Mastermind'),
-        backgroundColor: Colors.deepPurple,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'Restart') {
-                resetGame();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'Restart',
-                child: Text('Restart Game'),
-              ),
-            ],
-          ),
-        ],
+      appBar: CustomAppBar(
+        title: 'Mastermind',
+        onRestart: resetGame,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
         child: Column(
           children: [
             // Secret Code Display
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: secretCode.map((color) {
-                return ColorCircle(
-                  color: isSecretCodeRevealed ? color : Colors.grey[800]!,
-                  showText: !isSecretCodeRevealed,
-                  text: '?',
-                );
-              }).toList(),
+            SecretCode(
+              secretCode: secretCode,
+              isSecretCodeRevealed: isSecretCodeRevealed,
             ),
             SizedBox(height: 15),
             Text(
@@ -217,82 +195,45 @@ class GameScreenState extends State<GameScreen> {
               style: TextStyle(color: Colors.white, fontSize: 20),
             ),
             SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: attempts.length,
-                itemBuilder: (context, index) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ...attempts[index].map((color) => ColorCircle(
-                        color: color ?? Colors.grey[800]!,
-                        size: 30,
-                      )),
-                      SizedBox(width: 10),
-                      Row(
-                        children: List.generate(currentAttempt.length, (i) {
-                          Color feedbackColor;
-                          if (i < feedbacks[index]["correctPositions"]!) {
-                            feedbackColor = Colors.green; // Correct position
-                          } else if (i <
-                              feedbacks[index]["correctPositions"]! +
-                                  feedbacks[index]["correctColors"]!) {
-                            feedbackColor = Colors.amber; // Correct color
-                          } else {
-                            feedbackColor = Colors.white; // None
-                          }
-                          return ColorCircle(
-                            color: feedbackColor,
-                            size: 15,
-                            borderColor: Colors.grey,
-                          );
-                        }),
-                      ),
-                    ],
-                  );
-                },
-              ),
+            AttemptList(
+              attempts: attempts,
+              feedbacks: feedbacks,
+              currentAttempt: currentAttempt,
             ),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Stack(
+              alignment: Alignment.center,
               children: [
-                ...currentAttempt.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  Color? color = entry.value;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        currentAttempt[index] = null;
-                      });
-                    },
-                    child: DragTarget<Color>(
-                      onAcceptWithDetails: (receivedColor) {
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: currentAttempt.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Color? color = entry.value;
+                    return GestureDetector(
+                      onTap: () {
                         setState(() {
-                          currentAttempt[index] = receivedColor.data;
+                          currentAttempt[index] = null;
                         });
                       },
-                      builder: (context, candidateData, rejectedData) => ColorCircle(
-                        color: color ?? Colors.grey[800]!,
+                      child: DragTarget<Color>(
+                        onAcceptWithDetails: (receivedColor) {
+                          setState(() {
+                            currentAttempt[index] = receivedColor.data;
+                          });
+                        },
+                        builder: (context, candidateData, rejectedData) =>
+                            ColorCircle(
+                          color: color ?? Colors.grey[800]!,
+                        ),
                       ),
-                    ),
-                  );
-                }),
-                SizedBox(width: 10),
-                Visibility(
-                  visible: !currentAttempt.contains(null),
-                  maintainSize: true,
-                  maintainAnimation: true,
-                  maintainState: true,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(40, 40),
-                      padding: EdgeInsets.zero,
-                    ),
-                    onPressed: submitAttempt,
-                    child: Icon(Icons.check, size: 24, color: Colors.white),
+                    );
+                  }).toList(),
+                ),
+                Positioned(
+                  right: 0,
+                  child: SubmitButton(
+                    isVisible: !currentAttempt.contains(null),
+                    onSubmit: submitAttempt,
                   ),
                 ),
               ],
@@ -300,7 +241,7 @@ class GameScreenState extends State<GameScreen> {
             SizedBox(height: 20),
             Container(
               padding: EdgeInsets.symmetric(vertical: 10),
-              margin: EdgeInsets.only(top: 20),
+              margin: EdgeInsets.only(top: 20, bottom: 40),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(10),
@@ -309,7 +250,7 @@ class GameScreenState extends State<GameScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   double maxWidth =
-                  constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
+                      constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
                   return SizedBox(
                     width: maxWidth,
                     child: Row(
@@ -336,7 +277,76 @@ class GameScreenState extends State<GameScreen> {
       ),
     );
   }
+}
 
+
+
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onRestart;
+
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    required this.onRestart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(title),
+      backgroundColor: Colors.deepPurple,
+      actions: [
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'Restart') {
+              onRestart();
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'Restart',
+              child: Text('Restart Game'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class SubmitButton extends StatelessWidget {
+  final bool isVisible;
+  final VoidCallback onSubmit;
+
+  const SubmitButton({
+    super.key,
+    required this.isVisible,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: isVisible,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(40, 40),
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: onSubmit,
+        child: const Icon(Icons.check, size: 24, color: Colors.white),
+      ),
+    );
+  }
 }
 
 class ColorCircle extends StatelessWidget {
@@ -346,7 +356,8 @@ class ColorCircle extends StatelessWidget {
   final bool showText;
   final String text;
 
-  const ColorCircle({super.key,
+  const ColorCircle({
+    super.key,
     required this.color,
     this.size = 40.0,
     this.borderColor = Colors.white,
@@ -367,12 +378,93 @@ class ColorCircle extends StatelessWidget {
       ),
       child: showText
           ? Center(
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      )
+              child: Text(
+                text,
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            )
           : null,
+    );
+  }
+}
+
+class SecretCode extends StatelessWidget {
+  final List<Color> secretCode;
+  final bool isSecretCodeRevealed;
+
+  const SecretCode({
+    super.key,
+    required this.secretCode,
+    required this.isSecretCodeRevealed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: secretCode.map((color) {
+        return ColorCircle(
+          color: isSecretCodeRevealed ? color : Colors.grey[800]!,
+          showText: !isSecretCodeRevealed,
+          text: '?',
+        );
+      }).toList(),
+    );
+  }
+}
+
+class AttemptList extends StatelessWidget {
+  final List<List<Color?>> attempts;
+  final List<Map<String, int>> feedbacks;
+  final List<Color?> currentAttempt;
+
+  const AttemptList({
+    super.key,
+    required this.attempts,
+    required this.feedbacks,
+    required this.currentAttempt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: attempts.length,
+        itemBuilder: (context, index) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Cerchi per i colori degli "attempts"
+              ...attempts[index].map((color) => ColorCircle(
+                    color: color!,
+                    size: 30,
+                  )),
+              const SizedBox(width: 10),
+              // Feedback sui colori e posizioni
+              Row(
+                children: List.generate(currentAttempt.length, (i) {
+                  Color feedbackColor;
+                  if (i < feedbacks[index]["correctPositions"]!) {
+                    feedbackColor = Colors.green; // Posizione corretta
+                  } else if (i <
+                      feedbacks[index]["correctPositions"]! +
+                          feedbacks[index]["correctColors"]!) {
+                    feedbackColor = Colors.amber; // Colore corretto
+                  } else {
+                    feedbackColor = Colors.white; // Nessun match
+                  }
+                  return ColorCircle(
+                    color: feedbackColor,
+                    size: 15,
+                    borderColor: Colors.grey,
+                  );
+                }),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
