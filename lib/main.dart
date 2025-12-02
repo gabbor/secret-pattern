@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 void main() {
-  runApp(MastermindGame());
+  runApp(SecretPatternGame());
 }
 
-class MastermindGame extends StatelessWidget {
-  const MastermindGame({super.key});
+class SecretPatternGame extends StatelessWidget {
+  const SecretPatternGame({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mastermind',
+      title: 'SecretPattern',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
         primaryColor: Colors.deepPurple,
@@ -177,7 +177,7 @@ class GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Mastermind',
+        title: 'SecretPattern',
         onRestart: resetGame,
       ),
       body: Padding(
